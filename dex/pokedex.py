@@ -1,12 +1,14 @@
-import requests, sys, json
 import pokepy
-
 import random
 from pokepy.resources_v2 import NatureResource, PokemonResource, PokemonSpeciesResource
 class Pokedex:
     #Gen8 Compliant
     entries = 898
     api = pokepy.V2Client(cache='in_disk', cache_location="./data")
+    
+    @staticmethod
+    def get_species(pokemon: PokemonResource):
+        return Pokedex.api.get_pokemon_species(pokemon.species.name)
     
     @staticmethod
     def get_random_nature() -> NatureResource:
@@ -37,12 +39,21 @@ class Pokedex:
                 'galar': [x for x in range(810, 899)] + [x for x in range(10158, 10178)],
             }
             return Pokedex.get_random_poke(ranges[region])
-
-    @staticmethod
-    def get_evolution_level(species: PokemonResource):
-        species = Pokedex.api.get_species(species.species.name)
     
+    # TODO: Implement evolutions
+    @staticmethod
+    def get_evolutions(species: PokemonSpeciesResource, current=None, evs=None):
+        chain = Pokedex.get_evolution_chain(species)
+        if not current:
+            current = chain.chain
+        if not evs:
+            evs = []
+        
+        if current.species.name == species.name:
+            pass
+        
+        print(f"{species.name.capitalize()} evolves into {current.evolves_to.species.name.capitalize()}")
     
     @staticmethod
     def get_evolution_chain(species: PokemonSpeciesResource):
-        
+        return Pokedex.api.get_evolution_chain(species.evolution_chain.url.split("/")[-2])
