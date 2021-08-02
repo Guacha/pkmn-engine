@@ -18,7 +18,8 @@ class Pokemon():
         ivs = None,
         evs = None,
         nature = None,
-        ):
+        shiny = False
+        ) -> 'Pokemon':
         
         self.species: PokemonResource = species
         self.lvl = lvl
@@ -66,6 +67,7 @@ class Pokemon():
         self.status = status
         self.boosts = boosts
         self.moves = moves
+        self.shiny = shiny
     
     def calculate_stats(self) -> dict:
         base = self.species.stats
@@ -83,32 +85,23 @@ class Pokemon():
         # Calculate other stats
         for num, stat, long_stat in ((1, 'atk', 'attack'), (2, 'def', 'defense'), (3, 'spa', 'special-attack'), (4, 'spd', 'special-defense'), (5, 'spe', 'speed')):
             new_stats[stat] = ((2*base[num].base_stat + iv[stat] + ev[stat]//4) * self.lvl)//100 + 5
-            if self.nature.increased_stat.name == long_stat:
-                new_stats[stat] = math.floor(new_stats[stat] * 1.1)
-            
-            if self.nature.decreased_stat.name == long_stat:
-                new_stats[stat] = math.floor(new_stats[stat] * 0.9)
+            try:
+                if self.nature.increased_stat.name == long_stat:
+                    new_stats[stat] = math.floor(new_stats[stat] * 1.1)
+                
+                if self.nature.decreased_stat.name == long_stat:
+                    new_stats[stat] = math.floor(new_stats[stat] * 0.9)
+            except Exception:
+                pass
         
         return new_stats
             
     
     # TODO: Implement method to generate wild pokemon  
-    @staticmethod
+    @classmethod
     def create_wild(species: PokemonResource, level_range: list = None) -> 'Pokemon':
         if level_range is None:
             lvl = random.randint(2,80)
         else:
             lvl = random.choice(level_range)
         return Pokemon(species, lvl)
-    
-poke: Pokemon = Pokemon.create_wild(Pokedex.api.get_pokemon(1), level_range=range(1, 5))
-
-print(f"You've found a wild {poke.species.name.capitalize()} (Lvl. {poke.lvl})!")
-print(f"{poke.nature.name.capitalize()} nature")
-print("Stats:")
-for stat, value in poke.stats.items():
-    print(f"\t{stat.capitalize()}: {value}")
-
-print("IVs:")
-for iv, value in poke.ivs.items():
-    print(f"\t{iv.capitalize()}: {value}")

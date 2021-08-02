@@ -15,7 +15,7 @@ def exp_for_lvl(growth_rate, lvl):
     elif growth_rate == 'fast':
         return math.floor(4*lvl**3/5)
     
-    elif growth_rate == 'medium-fast':
+    elif growth_rate == 'medium':
         if lvl == 1: return 0
         return lvl**3
     

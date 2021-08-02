@@ -7,17 +7,17 @@ class Pokedex:
     entries = 898
     api = pokepy.V2Client(cache='in_disk', cache_location="./data")
     
-    @staticmethod
+    @classmethod
     def get_species(pokemon: PokemonResource):
         return Pokedex.api.get_pokemon_species(pokemon.species.name)
     
-    @staticmethod
+    @classmethod
     def get_random_nature() -> NatureResource:
         
         num = random.randint(1,25)
         return Pokedex.api.get_nature(num)
     
-    @staticmethod
+    @classmethod
     def get_random_poke(range: list = None) -> PokemonResource:
         if range:
             n = random.choice(range)
@@ -26,7 +26,7 @@ class Pokedex:
         
         return Pokedex.api.get_pokemon(n)
     
-    @staticmethod
+    @classmethod
     def random_poke_in_region(region: str) -> PokemonResource:
         if region:
             ranges = {
@@ -42,7 +42,7 @@ class Pokedex:
             return Pokedex.get_random_poke(ranges[region])
     
     # TODO: Implement evolutions
-    @staticmethod
+    @classmethod
     def get_evolutions(species: PokemonSpeciesResource, current=None, evs=None):
         chain = Pokedex.get_evolution_chain(species)
         if not current:
@@ -55,6 +55,12 @@ class Pokedex:
         
         print(f"{species.name.capitalize()} evolves into {current.evolves_to.species.name.capitalize()}")
     
-    @staticmethod
+    @classmethod
     def get_evolution_chain(species: PokemonSpeciesResource):
         return Pokedex.api.get_evolution_chain(species.evolution_chain.url.split("/")[-2])
+    
+    @classmethod
+    def get_moveset_for_level(species: PokemonResource, level: int) -> list:
+        valid_moveset = []
+        for move in species.moves:
+            pass
