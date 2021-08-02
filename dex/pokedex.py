@@ -1,6 +1,7 @@
 import pokepy
 import random
 from pokepy.resources_v2 import NatureResource, PokemonResource, PokemonSpeciesResource
+
 class Pokedex:
     #Gen8 Compliant
     entries = 898

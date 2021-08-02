@@ -1,6 +1,6 @@
 import random, sys, math
 sys.path.append(".")
-from dex import Pokedex
+from dex import Pokedex, exp_for_lvl
 from pokepy.resources_v2 import PokemonResource, NatureResource
 
 class Pokemon():
@@ -9,6 +9,8 @@ class Pokemon():
         self,
         species: PokemonResource,
         lvl: int,
+        exp = None, 
+        nick = None,
         stats: dict = None,
         status = None,
         boosts = None,
@@ -16,10 +18,15 @@ class Pokemon():
         ivs = None,
         evs = None,
         nature = None,
-        exp = 0):
+        ):
         
-        self.species: NatureResource = species
+        self.species: PokemonResource = species
         self.lvl = lvl
+        self.nick = nick
+        if exp:
+            self.exp: int = exp
+        else:
+            self.exp = exp_for_lvl(Pokedex.get_species(self.species).growth_rate.name, self.lvl)
         
         # Setting default IVs if necessary
         if ivs:
@@ -50,7 +57,7 @@ class Pokemon():
         if nature:
             self.nature = nature
         else:
-            nature = Pokedex.get_random_nature()
+            self.nature = Pokedex.get_random_nature()
         
         if stats:
             self.stats: dict = stats
@@ -61,24 +68,47 @@ class Pokemon():
         self.moves = moves
     
     def calculate_stats(self) -> dict:
-        base = self.species
+        base = self.species.stats
         iv = self.ivs
         ev = self.evs
         new_stats = {}
-        new_stats['hp'] = ((2 * base[0].base_stat + iv['hp'] + ev['hp']//4) * self.lvl)//100 + 10 + self.lvl
+        
+        # Hp is calculated on a different formula
+        # Exception for shedinja
+        if self.species.name == 'shedinja':
+            new_stats['hp'] = 1
+        else:
+            new_stats['hp'] = ((2 * base[0].base_stat + iv['hp'] + ev['hp']//4) * self.lvl)//100 + 10 + self.lvl
+        
+        # Calculate other stats
         for num, stat, long_stat in ((1, 'atk', 'attack'), (2, 'def', 'defense'), (3, 'spa', 'special-attack'), (4, 'spd', 'special-defense'), (5, 'spe', 'speed')):
-            new_stats[stat] = (2*base[num].base_stat + iv[stat] + ev[stat]//4 * self.lvl)//100 + 5
-            if self.nature.increased_stat == long_stat:
-                new_stats = math.floor(new_stats[stat] * 1.1)
+            new_stats[stat] = ((2*base[num].base_stat + iv[stat] + ev[stat]//4) * self.lvl)//100 + 5
+            if self.nature.increased_stat.name == long_stat:
+                new_stats[stat] = math.floor(new_stats[stat] * 1.1)
             
-            if self.nature.decreased_stat == long_stat:
-                new_stats = math.floor(new_stats[stat] * 0.9)
+            if self.nature.decreased_stat.name == long_stat:
+                new_stats[stat] = math.floor(new_stats[stat] * 0.9)
         
         return new_stats
             
     
     # TODO: Implement method to generate wild pokemon  
     @staticmethod
-    def create_wild(species: PokemonResource, level_range: list = None):
-        lvl = random.randint(2,75)
+    def create_wild(species: PokemonResource, level_range: list = None) -> 'Pokemon':
+        if level_range is None:
+            lvl = random.randint(2,80)
+        else:
+            lvl = random.choice(level_range)
         return Pokemon(species, lvl)
+    
+poke: Pokemon = Pokemon.create_wild(Pokedex.api.get_pokemon(1), level_range=range(1, 5))
+
+print(f"You've found a wild {poke.species.name.capitalize()} (Lvl. {poke.lvl})!")
+print(f"{poke.nature.name.capitalize()} nature")
+print("Stats:")
+for stat, value in poke.stats.items():
+    print(f"\t{stat.capitalize()}: {value}")
+
+print("IVs:")
+for iv, value in poke.ivs.items():
+    print(f"\t{iv.capitalize()}: {value}")
